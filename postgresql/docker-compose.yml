@@ -1,0 +1,27 @@
+services:
+  db:
+    image: postgres:latest
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    secrets:
+      - postgres_password
+    networks:
+      - postgres_network
+
+volumes:
+  postgres_data:
+    driver: local
+
+secrets:
+  postgres_password:
+    file: ../secrets/postgres_password.txt
+
+networks:
+  postgres_network:
+    driver: bridge
