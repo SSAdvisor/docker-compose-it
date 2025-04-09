@@ -1,0 +1,39 @@
+services:
+  wordpress:
+    image: wordpress:latest
+    container_name: wordpress
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    environment:
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/mysql_root_password
+      WORDPRESS_DB_HOST: mysql  # Hostname of the running MySQL container
+      WORDPRESS_DB_USER: wordpress  # Non-root user for WordPress
+      WORDPRESS_DB_PASSWORD_FILE: /run/secrets-adjusted/wordpress_db_password
+      WORDPRESS_DB_NAME: wordpress_db  # Database name for WordPress
+    volumes:
+      - wordpress_data:/var/www/html
+      - ./init-scripts:/docker-entrypoint-initdb.d
+      - ./init-script.sh:/usr/local/bin/init-script.sh
+      - ./custom-entrypoint.sh:/custom-entrypoint.sh
+      - wordpress_secrets:/run/secrets-adjusted
+    networks:
+      - mysql_network
+    secrets:
+      - mysql_root_password
+      - wordpress_db_password
+    entrypoint: ["sh", "-c", "/usr/local/bin/init-script.sh && /custom-entrypoint.sh"]
+
+secrets:
+  wordpress_db_password:
+    file: ../secrets/wordpress_db_password.txt
+  mysql_root_password:
+    file: ../secrets/mysql_root_password.txt
+
+networks:
+  mysql_network:
+    external: true
+
+volumes:
+  wordpress_data:
+  wordpress_secrets:
